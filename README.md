@@ -7,9 +7,7 @@ This project demonstrates a methodology for probabilistic time series forecastin
 The core approach involves the following steps:
 
 1.  **Data Simulation:**
-    A time series is generated using the Euler-Maruyama method to approximate an SDE of the form:
-    `dX_t = mu * dt + sigma * dW_t`
-    This serves as the ground truth data with known underlying stochastic properties (constant drift `mu` and diffusion `sigma`).
+    A time series is generated using the Euler-Maruyama method to approximate an SDE of the form $dX_t = \mu dt + \sigma dW_t$. This serves as the ground truth data with known underlying stochastic properties (constant drift $\mu$ and diffusion $\sigma$).
 
 2.  **Data Preprocessing:**
     The simulated time series is:
@@ -19,19 +17,21 @@ The core approach involves the following steps:
 
 3.  **Probabilistic LSTM Model:**
     An LSTM network is designed to output two parameters for each input sequence:
-    * `mu_hat_prime`: The predicted mean of the (scaled) next value in the time series.
-    * `log_sigma_hat_prime_sq`: The predicted log-variance (logarithm of sigma_hat_prime^2) of the (scaled) next value.
-    These parameters define a Gaussian distribution `N(mu_hat_prime, sigma_hat_prime^2)` for the prediction.
+    * $\hat{\mu}'$: The predicted mean of the (scaled) next value in the time series.
+    * $\log(\hat{\sigma}'^2)$: The predicted log-variance of the (scaled) next value.
+    These parameters define a Gaussian distribution $N(\hat{\mu}', \hat{\sigma}'^2)$ for the prediction.
 
 4.  **Hybrid Loss Function for Training:**
-    The model is trained by minimizing a composite loss function that includes:
+    The model is trained by minimizing a composite loss function. For a given scaled target $Y'$ and its corresponding prediction $(\hat{\mu}', \log(\hat{\sigma}'^2))$, the components are:
     * **Gaussian Negative Log-Likelihood (NLL):** Encourages the predicted distribution to match the observed data.
-      `L_NLL = 0.5 * (log(2*pi) + log_sigma_hat_prime_sq + ((Y_prime - mu_hat_prime)^2 / exp(log_sigma_hat_prime_sq)))`
+        $$ L_{\text{NLL}}(Y', \hat{\mu}', \log(\hat{\sigma}'^2)) = \frac{1}{2}\left(\log(2\pi) + \log(\hat{\sigma}'^2) + \frac{(Y' - \hat{\mu}')^2}{\exp(\log(\hat{\sigma}'^2))}\right) $$
     * **Mean Squared Error (MSE) on the Mean:** Penalizes errors in the point prediction of the mean.
-      `L_MSE = (Y_prime - mu_hat_prime)^2`
-    * **SDE Parameter Consistency (PINN-like) Loss:** A physics-informed term that encourages the mean and variance of the *predicted scaled increments* (derived from the LSTM's outputs) to align with the known (scaled) drift and diffusion parameters of the underlying SDE. This component uses MSE to compare the model's implied increment statistics (`m_hat_prime_delta`, `v_hat_prime_delta`) to the target statistics derived from `mu_true` and `sigma_true` (`m_prime_delta_target`, `v_prime_delta_target`).
-      `L_SDE_Consist = lambda_drift * (m_hat_prime_delta - m_prime_delta_target)^2 + lambda_diffusion * (v_hat_prime_delta - v_prime_delta_target)^2`
-    The total loss is a weighted sum of these components.
+        $$ L_{\text{MSE}}(Y', \hat{\mu}') = (Y' - \hat{\mu}')^2 $$
+    * **SDE Parameter Consistency (PINN-like) Loss:** A physics-informed term. It encourages the model's implied scaled increment statistics ($\hat{m}'_{\Delta}$ for mean, $\hat{v}'_{\Delta}$ for variance) to align with target scaled increment statistics ($m'_{\Delta, \text{target}}$, $v'_{\Delta, \text{target}}$) derived from the true SDE parameters ($\mu_{\text{true}}$, $\sigma_{\text{true}}$) and the time step $\Delta t$.
+        $$ L_{\text{SDE-Consist}} = \lambda_{\text{drift}} (\hat{m}'_{\Delta} - m'_{\Delta, \text{target}})^2 + \lambda_{\text{diffusion}} (\hat{v}'_{\Delta} - v'_{\Delta, \text{target}})^2 $$
+    The **total loss** for a single prediction is a weighted sum of these components:
+        $$ L_{\text{total}} = L_{\text{NLL}} + \lambda_{\text{MSE}} \cdot L_{\text{MSE}} + L_{\text{SDE-Consist}} $$
+    During training, the average of $L_{\text{total}}$ over a batch of data is minimized. The $\lambda$ terms are hyperparameters weighting the respective loss components.
 
 5.  **Evaluation and Uncertainty Quantification:**
     The trained model is evaluated on a test set using:
