@@ -27,7 +27,7 @@ The core approach involves the following steps:
         $L_{\text{NLL}} = \frac{1}{2}\left(\log(2\pi\hat{\sigma}'^2) + \frac{(Y' - \hat{\mu}')^2}{\hat{\sigma}'^2}\right)$
     * **Mean Squared Error (MSE) on the Mean:** Penalizes errors in the point prediction of the mean.
         $L_{\text{MSE}} = (Y' - \hat{\mu}')^2$
-    * **SDE Parameter Consistency (PINN-like) Loss:** A physics-informed term that encourages the mean and variance of the *predicted scaled increments* (derived from the LSTM's outputs) to align with the known (scaled) drift and diffusion parameters of the underlying SDE. This component uses MSE to compare the model's implied increment statistics to the target statistics derived from \[\mu_{\text{true}}$ and $\sigma_{\text{true}}\].
+    * **SDE Parameter Consistency (PINN-like) Loss:** A physics-informed term that encourages the mean and variance of the *predicted scaled increments* (derived from the LSTM's outputs) to align with the known (scaled) drift and diffusion parameters of the underlying SDE. This component uses MSE to compare the model's implied increment statistics to the target statistics derived from $$\mu_{\text{true}}$ and $\sigma_{\text{true}}$$
         $L_{\text{SDE-Consist}} = \lambda_{\text{drift}} (\hat{m}'_{\Delta} - m'_{\Delta, \text{target}})^2 + \lambda_{\text{diffusion}} (\hat{v}'_{\Delta} - v'_{\Delta, \text{target}})^2$
     The total loss is a weighted sum of these components.
 
