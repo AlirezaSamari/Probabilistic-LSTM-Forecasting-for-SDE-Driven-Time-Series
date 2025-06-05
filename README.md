@@ -40,4 +40,4 @@ The total loss is a weighted sum of these components.
 
 ## Purpose
 
-This notebook serves as an example of how to build LSTMs for probabilistic time series forecasting and how to incorporate domain knowledge (in this case, the known SDE parameters) into the training process through a hybrid, physics-informed loss function. It highlights a method to achieve both accurate predictions and reliable uncertainty estimates.
+This notebook serves as an example of how to build LSTMs for probabilistic time series forecasting and how to incorporate domain knowledge (in this case, the known SDE parameters) into the training process through a hybrid loss function. It highlights a method to achieve both accurate predictions and reliable uncertainty estimates.
